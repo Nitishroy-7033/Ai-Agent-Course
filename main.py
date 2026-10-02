@@ -1,6 +1,24 @@
-def main():
-    print("Hello from ai-agent-course!")
+from langchain_ollama import ChatOllama
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+model = ChatOllama(
+    model="qwen3:4b"
+)
 
 
-if __name__ == "__main__":
-    main()
+response = model.invoke("Hey there! How are you doing today?")
+
+
+
+
+class ChatRequest(BaseModel):
+    message: str
+
+@app.post("/chat")
+async def chat(request: ChatRequest):
+    response = model.invoke(request.message)
+    return {
+        "response": response.content
+        }
