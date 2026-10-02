@@ -68,3 +68,139 @@ def chat(request: ChatRequest):
 
 run this with this command 
 uv run uvicorn main:app --reload
+
+
+-------System Prompt----------
+from langchain_core.messages import SystemMessage, HumanMessage
+
+messages = [
+    SystemMessage(
+        content="You are a helpful Python teacher."
+    ),
+    HumanMessage(
+        content="What is a Python list?"
+    )
+]
+
+
+update api 
+@app.post("/chat")
+async def chat(request: ChatRequest):
+    messages = [
+        SystemMessage( content="""
+    You are a Python tutor.
+
+    Rules:
+    - Explain concepts simply.
+    - Give small examples.
+    - Avoid unnecessary complexity.
+    - Ask a question at the end.
+    """),
+        HumanMessage(content=request.message)
+]
+    response = model.invoke(messages)
+    return {
+        "response": response.content
+        }
+
+
+------Prompt Templates-----------
+
+from langchain_core.prompts import ChatPromptTemplate
+@app.post("/chat")
+async def chat(request: ChatRequest):
+   
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "Your are a {role}. Explain concepts simply, give small examples, avoid unnecessary complexity, and ask a question at the end."
+        ),
+        (
+            "human",
+            "{message}"
+        )
+    ])
+    messages = prompt.invoke({
+        "role": "software engineer",
+        "message": request.message
+    })
+    response = model.invoke(messages)
+    return {
+        "response": response.content
+        }
+
+
+
+
+-------Structured Output----------
+
+uv add pydantic
+
+class TopicAnalysis(BaseModel):
+    topic: str
+    difficulty: str
+    summary: str
+
+model = ChatOllama(
+    model="ornith"
+)
+
+structured_model = model.with_structured_output(TopicAnalysis)
+
+
+
+
+@app.post("/structured_chat")
+async def structured_chat(request: ChatRequest): 
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You are a {role}. Analyze the topic and provide a structured response with topic, difficulty, and summary."
+        ),
+        (
+            "human",
+            "{message}"
+        )
+    ])
+    messages = prompt.invoke({
+        "role": "software engineer",
+        "message": request.message
+    })
+    response = structured_model.invoke(messages)
+    return response
+
+
+-----------------
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------
+
+
+
+
+
+
+-----------------
